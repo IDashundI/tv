@@ -3,24 +3,26 @@
 <meta name="viewport" content="width=1920, height=1080">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{width:1920px;height:1080px;overflow:hidden;background:#05060d;color:#fff;font-family:"SamsungOne","Helvetica Neue",Arial,sans-serif}
-#bg{position:fixed;inset:-200px;background:
+html,body{width:1920px;height:1080px;overflow:hidden;position:fixed;top:0;left:0;background:#05060d;color:#fff;font-family:"SamsungOne","Helvetica Neue",Arial,sans-serif}
+#stage{position:fixed;left:0;top:0;width:1920px;height:1080px;overflow:hidden}
+#bg{position:absolute;inset:-200px;background:
  radial-gradient(900px 700px at 20% 25%,#27408f 0%,transparent 60%),
  radial-gradient(900px 800px at 85% 80%,#6a2a8f 0%,transparent 60%),
  radial-gradient(700px 600px at 70% 15%,#0f6f7c 0%,transparent 60%),#05060d;
  animation:drift 40s ease-in-out infinite alternate;opacity:.85}
 @keyframes drift{to{transform:translate3d(-80px,40px,0) scale(1.08)}}
-#shade{position:fixed;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,.55))}
+#shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,.55))}
 #top{position:absolute;left:96px;top:70px;right:96px;display:flex;justify-content:space-between;align-items:flex-start}
 #time{font-size:96px;font-weight:200;letter-spacing:-2px;line-height:1}
 #date{font-size:30px;opacity:.65;margin-top:10px}
 #title{font-size:30px;opacity:.55;margin-top:18px;text-align:right}
-#rowwrap{position:absolute;left:0;right:0;top:400px;height:480px;overflow:visible}
-#row{position:absolute;left:0;top:0;display:flex;gap:44px;padding:60px 0 0 96px;transition:transform .45s cubic-bezier(.2,.8,.2,1);will-change:transform}
+#rowwrap{position:absolute;left:0;width:1920px;top:330px;height:640px;overflow:hidden}
+#row{position:absolute;left:0;top:0;display:flex;gap:44px;padding:90px 0 0 96px;transition:transform .45s cubic-bezier(.2,.8,.2,1);will-change:transform}
 .card{width:420px;flex:none;position:relative;transition:transform .3s cubic-bezier(.2,.8,.2,1),opacity .3s;opacity:.88}
 .tile{height:236px;border-radius:30px;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;
  box-shadow:0 10px 30px rgba(0,0,0,.35);transition:box-shadow .3s}
-.tile img{max-width:70%;max-height:70%;object-fit:contain;filter:drop-shadow(0 6px 12px rgba(0,0,0,.4))}
+.tile img{width:96px;height:96px;object-fit:contain;filter:brightness(0) invert(1) drop-shadow(0 6px 12px rgba(0,0,0,.35))}
+.tile .w{font-size:64px;font-weight:700;letter-spacing:-1px;text-shadow:0 4px 16px rgba(0,0,0,.35)}
 .tile .l{font-size:110px;font-weight:600;text-shadow:0 4px 16px rgba(0,0,0,.35)}
 .tile::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,rgba(255,255,255,.28) 0%,rgba(255,255,255,0) 40%);opacity:0;transition:opacity .3s}
 .name{margin-top:22px;text-align:center;font-size:30px;opacity:0;transform:translateY(-6px);transition:all .3s;text-shadow:0 2px 10px rgba(0,0,0,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -31,14 +33,47 @@ html,body{width:1920px;height:1080px;overflow:hidden;background:#05060d;color:#f
 .card.go{transform:scale(1.04);transition-duration:.12s}
 #hint{position:absolute;bottom:50px;left:0;right:0;text-align:center;font-size:24px;opacity:.4}
 </style></head><body>
+<div id="stage">
 <div id="bg"></div><div id="shade"></div>
 <div id="top"><div><div id="time">--:--</div><div id="date"></div></div><div id="title">Главная</div></div>
 <div id="rowwrap"><div id="row"></div></div>
 <div id="hint">◀ ▶ выбор · OK запуск · Return выход</div>
+</div>
 <script>
 var FAV=[["YouTube","111299001912"],["Netflix","3201907018807"],["Kinopoisk","3201909018975"],["Disney+","3201901017640"],["Prime Video","3201512006785"],["Plex","3201512006963"],["Media Station X","111299002148"],["Jellyfin","3201911019236"],["Apple TV","3201807016597"],["Internet","org.tizen.browser"]];
 var apps=[],sel=0,cards=[];
 var COLORS=[["#ff5f6d","#ffc371"],["#4776e6","#8e54e9"],["#11998e","#38ef7d"],["#f7971e","#ffd200"],["#ee0979","#ff6a00"],["#2193b0","#6dd5ed"],["#614385","#516395"],["#c31432","#240b36"]];
+var BRANDS=[
+ [/youtube|ютуб/i,"youtube.svg","#ff2d2d","#a30000"],
+ [/netflix/i,"netflix.svg","#e50914","#6b0007"],
+ [/disney/i,null,"#1b3c8f","#0b1c52","Disney+"],
+ [/prime|amazon/i,"primevideo.svg","#00a8e1","#0a3a6b"],
+ [/plex/i,"plex.svg","#ebaf00","#7a4a00"],
+ [/jellyfin/i,"jellyfin.svg","#8f5ad8","#3b3fa8"],
+ [/apple/i,"appletv.svg","#3a3a3c","#0b0b0d"],
+ [/kinopoisk|кинопоиск/i,"kinopoisk.svg","#ff6a00","#8a2d00"],
+ [/ivi|иви/i,null,"#ea003d","#6b0021","ivi"],
+ [/okko|окко/i,null,"#6a2cff","#2b0d8a","Okko"],
+ [/twitch/i,"twitch.svg","#9146ff","#4a1f9c"],
+ [/spotify/i,"spotify.svg","#1db954","#0b5a28"],
+ [/vlc/i,"vlcmediaplayer.svg","#ff8800","#8a3d00"],
+ [/chrome/i,"googlechrome.svg","#4285f4","#1a3f8a"],
+ [/internet|browser|браузер/i,"samsung.svg","#1428a0","#0a1457"],
+ [/samsung/i,"samsung.svg","#1428a0","#0a1457"],
+ [/\bmax\b|hbo/i,"max.svg","#002be7","#0a0f6b"],
+ [/tiktok/i,"tiktok.svg","#25f4ee","#fe2c55"],
+ [/steam/i,"steam.svg","#1b2838","#0b1018"],
+ [/playstation|ps remote|ps5/i,"playstation.svg","#003791","#001a4a"],
+ [/kodi/i,"kodi.svg","#17b2e7","#0a4a63"],
+ [/crunchyroll/i,"crunchyroll.svg","#f47521","#8a3a00"],
+ [/vk|вк/i,"vk.svg","#0077ff","#003e87"],
+ [/telegram/i,"telegram.svg","#27a7e7","#0e5f8a"],
+ [/whatsapp/i,"whatsapp.svg","#25d366","#0b6b32"],
+ [/google play|play store/i,"googleplay.svg","#34a853","#0f5a24"],
+ [/apple music/i,"applemusic.svg","#fa243c","#7a0a18"],
+ [/media station|msx/i,null,"#0e7c86","#073c42","MSX"]
+];
+function brand(n){for(var i=0;i<BRANDS.length;i++)if(BRANDS[i][0].test(n))return BRANDS[i];return null}
 function h(s){var x=0;for(var i=0;i<s.length;i++)x=(x*31+s.charCodeAt(i))>>>0;return x}
 function clock(){var d=new Date(),p=function(n){return(n<10?"0":"")+n};
  document.getElementById("time").textContent=p(d.getHours())+":"+p(d.getMinutes());
@@ -50,9 +85,13 @@ function build(){
  apps.forEach(function(a,i){
   var c=document.createElement("div");c.className="card";
   var t=document.createElement("div");t.className="tile";
-  var col=COLORS[h(a.name)%COLORS.length];t.style.background="linear-gradient(135deg,"+col[0]+","+col[1]+")";
-  var l=document.createElement("span");l.className="l";l.textContent=(a.name||"?").charAt(0).toUpperCase();t.appendChild(l);
-  if(a.icon){var im=new Image();im.onload=function(){t.innerHTML="";t.style.background="linear-gradient(135deg,#2b2f45,#14172a)";t.appendChild(im)};im.src=a.icon}
+  var br=brand(a.name);
+  if(br){t.style.background="linear-gradient(135deg,"+br[2]+","+br[3]+")";
+   if(br[1]){var im=new Image();im.src="icons/"+br[1];t.appendChild(im)}
+   else{var w=document.createElement("span");w.className="w";w.textContent=br[4]||a.name;t.appendChild(w)}}
+  else{var col=COLORS[h(a.name)%COLORS.length];t.style.background="linear-gradient(135deg,"+col[0]+","+col[1]+")";
+   var l=document.createElement("span");l.className="l";l.textContent=(a.name||"?").charAt(0).toUpperCase();t.appendChild(l);
+   if(a.icon){var im2=new Image();im2.onload=function(){t.innerHTML="";t.style.background="linear-gradient(135deg,#2b2f45,#14172a)";t.appendChild(im2)};im2.src=a.icon}}
   var n=document.createElement("div");n.className="name";n.textContent=a.name;
   c.appendChild(t);c.appendChild(n);row.appendChild(c);cards.push(c)});
  focus(0)}
