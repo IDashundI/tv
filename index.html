@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>Главная</title>
+<meta name="viewport" content="width=1920, height=1080">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1920px;height:1080px;overflow:hidden;background:#05060d;color:#fff;font-family:"SamsungOne","Helvetica Neue",Arial,sans-serif}
+#bg{position:fixed;inset:-200px;background:
+ radial-gradient(900px 700px at 20% 25%,#27408f 0%,transparent 60%),
+ radial-gradient(900px 800px at 85% 80%,#6a2a8f 0%,transparent 60%),
+ radial-gradient(700px 600px at 70% 15%,#0f6f7c 0%,transparent 60%),#05060d;
+ animation:drift 40s ease-in-out infinite alternate;opacity:.85}
+@keyframes drift{to{transform:translate3d(-80px,40px,0) scale(1.08)}}
+#shade{position:fixed;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,.55))}
+#top{position:absolute;left:96px;top:70px;right:96px;display:flex;justify-content:space-between;align-items:flex-start}
+#time{font-size:96px;font-weight:200;letter-spacing:-2px;line-height:1}
+#date{font-size:30px;opacity:.65;margin-top:10px}
+#title{font-size:30px;opacity:.55;margin-top:18px;text-align:right}
+#rowwrap{position:absolute;left:0;right:0;top:400px;height:480px;overflow:visible}
+#row{position:absolute;left:0;top:0;display:flex;gap:44px;padding:60px 0 0 96px;transition:transform .45s cubic-bezier(.2,.8,.2,1);will-change:transform}
+.card{width:420px;flex:none;position:relative;transition:transform .3s cubic-bezier(.2,.8,.2,1),opacity .3s;opacity:.88}
+.tile{height:236px;border-radius:30px;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;
+ box-shadow:0 10px 30px rgba(0,0,0,.35);transition:box-shadow .3s}
+.tile img{max-width:70%;max-height:70%;object-fit:contain;filter:drop-shadow(0 6px 12px rgba(0,0,0,.4))}
+.tile .l{font-size:110px;font-weight:600;text-shadow:0 4px 16px rgba(0,0,0,.35)}
+.tile::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,rgba(255,255,255,.28) 0%,rgba(255,255,255,0) 40%);opacity:0;transition:opacity .3s}
+.name{margin-top:22px;text-align:center;font-size:30px;opacity:0;transform:translateY(-6px);transition:all .3s;text-shadow:0 2px 10px rgba(0,0,0,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card.on{transform:scale(1.14) translateY(-10px);opacity:1;z-index:2}
+.card.on .tile{box-shadow:0 40px 70px rgba(0,0,0,.6),0 0 0 3px rgba(255,255,255,.25)}
+.card.on .tile::after{opacity:1}
+.card.on .name{opacity:1;transform:none}
+.card.go{transform:scale(1.04);transition-duration:.12s}
+#hint{position:absolute;bottom:50px;left:0;right:0;text-align:center;font-size:24px;opacity:.4}
+</style></head><body>
+<div id="bg"></div><div id="shade"></div>
+<div id="top"><div><div id="time">--:--</div><div id="date"></div></div><div id="title">Главная</div></div>
+<div id="rowwrap"><div id="row"></div></div>
+<div id="hint">◀ ▶ выбор · OK запуск · Return выход</div>
+<script>
+var FAV=[["YouTube","111299001912"],["Netflix","3201907018807"],["Kinopoisk","3201909018975"],["Disney+","3201901017640"],["Prime Video","3201512006785"],["Plex","3201512006963"],["Media Station X","111299002148"],["Jellyfin","3201911019236"],["Apple TV","3201807016597"],["Internet","org.tizen.browser"]];
+var apps=[],sel=0,cards=[];
+var COLORS=[["#ff5f6d","#ffc371"],["#4776e6","#8e54e9"],["#11998e","#38ef7d"],["#f7971e","#ffd200"],["#ee0979","#ff6a00"],["#2193b0","#6dd5ed"],["#614385","#516395"],["#c31432","#240b36"]];
+function h(s){var x=0;for(var i=0;i<s.length;i++)x=(x*31+s.charCodeAt(i))>>>0;return x}
+function clock(){var d=new Date(),p=function(n){return(n<10?"0":"")+n};
+ document.getElementById("time").textContent=p(d.getHours())+":"+p(d.getMinutes());
+ var D=["воскресенье","понедельник","вторник","среда","четверг","пятница","суббота"],M=["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
+ document.getElementById("date").textContent=D[d.getDay()]+", "+d.getDate()+" "+M[d.getMonth()]}
+setInterval(clock,10000);clock();
+function build(){
+ var row=document.getElementById("row");row.innerHTML="";cards=[];
+ apps.forEach(function(a,i){
+  var c=document.createElement("div");c.className="card";
+  var t=document.createElement("div");t.className="tile";
+  var col=COLORS[h(a.name)%COLORS.length];t.style.background="linear-gradient(135deg,"+col[0]+","+col[1]+")";
+  var l=document.createElement("span");l.className="l";l.textContent=(a.name||"?").charAt(0).toUpperCase();t.appendChild(l);
+  if(a.icon){var im=new Image();im.onload=function(){t.innerHTML="";t.style.background="linear-gradient(135deg,#2b2f45,#14172a)";t.appendChild(im)};im.src=a.icon}
+  var n=document.createElement("div");n.className="name";n.textContent=a.name;
+  c.appendChild(t);c.appendChild(n);row.appendChild(c);cards.push(c)});
+ focus(0)}
+function focus(i){
+ if(!cards.length)return;sel=Math.max(0,Math.min(cards.length-1,i));
+ cards.forEach(function(c,k){c.classList.toggle("on",k===sel)});
+ var x=Math.max(0,sel*464-700);document.getElementById("row").style.transform="translateX("+(-x)+"px)"}
+function launch(){var a=apps[sel];if(!a)return;cards[sel].classList.add("go");
+ var viaRest=function(){try{fetch("http://127.0.0.1:8001/api/v2/applications/"+encodeURIComponent(a.id),{method:"POST",mode:"no-cors"})}catch(e){console.log(e)}};
+ try{tizen.application.launch(a.id,function(){},function(e){console.log("launch err",e.message);viaRest()})}catch(e){viaRest()}}
+document.addEventListener("keydown",function(e){
+ switch(e.keyCode){case 37:focus(sel-1);break;case 39:focus(sel+1);break;case 38:case 40:break;
+ case 13:launch();break;case 10009:try{tizen.application.getCurrentApplication().exit()}catch(x){}break}});
+function load(){
+ try{tizen.tvinputdevice.registerKeyBatch(["MediaPlay"])}catch(e){}
+ try{tizen.application.getAppsInfo(function(list){
+  var m={};list.forEach(function(a){if(a.show!==false)m[a.id]=a});
+  var out=[],used={};
+  FAV.forEach(function(f){var a=m[f[1]];if(a){out.push(map(a));used[a.id]=1}});
+  Object.keys(m).map(function(k){return m[k]}).filter(function(a){return!used[a.id]&&a.id.indexOf("PshLaunch1")!==0})
+   .sort(function(a,b){return a.name.localeCompare(b.name)}).forEach(function(a){out.push(map(a))});
+  apps=out;build()},function(){fallback()})}catch(e){fallback()}}
+function map(a){return{id:a.id,name:a.name,icon:a.iconPath?"file://"+a.iconPath:null}}
+function fallback(){apps=FAV.map(function(f){return{id:f[1],name:f[0]}});build()}
+load();
+</script></body></html>

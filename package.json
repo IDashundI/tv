@@ -1,0 +1,11 @@
+{
+  "name": "tv-launcher",
+  "version": "1.0.0",
+  "description": "Лаунчер в стиле tvOS для Samsung Tizen TV",
+  "packageType": "app",
+  "appName": "Главная",
+  "appPath": "index.html",
+  "main": "index.html",
+  "keys": [],
+  "license": "MIT"
+}
